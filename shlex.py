@@ -20,7 +20,7 @@ __all__ = ["shlex", "split"]
 
 class shlex:
     "A lexical analyzer class for simple shell-like syntaxes."
-    def __init__(self, instream=None, infile=None, posix=False):
+    def __init__(self, instream=None, infile=None, posix=False, unquote_posix=True):
         if isinstance(instream, basestring):
             instream = StringIO(instream)
         if instream is not None:
@@ -30,6 +30,7 @@ class shlex:
             self.instream = sys.stdin
             self.infile = None
         self.posix = posix
+        self.unquote_posix = unquote_posix
         if posix:
             self.eof = None
         else:
@@ -151,7 +152,7 @@ class shlex:
                     self.token = nextchar
                     self.state = 'a'
                 elif nextchar in self.quotes:
-                    if not self.posix:
+                    if not self.posix or not self.unquote_posix:
                         self.token = nextchar
                     self.state = nextchar
                 elif self.whitespace_split:
@@ -176,6 +177,8 @@ class shlex:
                         self.state = ' '
                         break
                     else:
+                        if not self.unquote_posix:
+                            self.token = self.token + nextchar
                         self.state = 'a'
                 elif self.posix and nextchar in self.escape and \
                      self.state in self.escapedquotes:
@@ -290,3 +293,5 @@ if __name__ == '__main__':
             print "Token: " + repr(tt)
         else:
             break
+
+
